@@ -81,3 +81,104 @@ body {
   transform: translateY(-8px);
   box-shadow: 0 12px 24px rgba(0,0,0,0.1);
 }
+
+/* Category Navigation Cards */
+.category-card {
+  background-color: var(--surface);
+  border: 2px solid transparent;
+  border-radius: 16px;
+  padding: 16px 12px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.04);
+}
+
+.category-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.08);
+  border-color: rgba(255, 71, 87, 0.3);
+}
+
+.category-card.active {
+  border-color: var(--primary);
+  background: linear-gradient(145deg, var(--surface) 0%, rgba(255, 71, 87, 0.05) 100%);
+  box-shadow: 0 8px 20px rgba(255, 71, 87, 0.15);
+}
+
+.category-icon-circle {
+  width: 58px;
+  height: 58px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.8rem;
+  margin: 0 auto 10px;
+  transition: transform 0.3s ease;
+}
+
+.category-card:hover .category-icon-circle {
+  transform: scale(1.1);
+}
+
+/* Category Specific Badges */
+.badge-veg {
+  background-color: #e8faf0 !important;
+  color: #2ed573 !important;
+  border: 1px solid #a3f1c1;
+}
+
+.badge-nonveg {
+  background-color: #ffebee !important;
+  color: #ff4757 !important;
+  border: 1px solid #ffb3ba;
+}
+
+.badge-colddrink {
+  background-color: #e1f5fe !important;
+  color: #0288d1 !important;
+  border: 1px solid #81d4fa;
+}
+
+.badge-icecream {
+  background-color: #f3e5f5 !important;
+  color: #8e24aa !important;
+  border: 1px solid #ce93d8;
+}
+
+.badge-recommended {
+  background: linear-gradient(135deg, #ff9f43 0%, #ee5253 100%) !important;
+  color: #ffffff !important;
+}
+
+/* Filter pills */
+.category-pill {
+  transition: all 0.2s ease;
+  font-weight: 600;
+  border-radius: 50px;
+  padding: 8px 18px;
+  font-size: 0.9rem;
+}
+
+/* Toast alert notification */
+.toast-notification {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  z-index: 1050;
+  min-width: 280px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+  animation: slideUp 0.3s ease-out;
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

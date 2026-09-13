@@ -29,9 +29,9 @@ class Order(models.Model):
     )
 
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='orders')
-    restaurant = models.ForeignKey(Restaurant, on_delete=models.CASCADE, related_name='orders')
-    delivery_address = models.ForeignKey(Address, on_delete=models.SET_NULL, null=True)
-    total_amount = models.DecimalField(max_digits=10, decimal_places=2)
+    restaurant = models.ForeignKey(Restaurant, on_delete=models.SET_NULL, null=True, blank=True, related_name='orders')
+    delivery_address = models.ForeignKey(Address, on_delete=models.SET_NULL, null=True, blank=True)
+    total_amount = models.DecimalField(max_digits=10, decimal_places=2, default=0.0)
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='Pending')
     created_at = models.DateTimeField(auto_now_add=True)
 

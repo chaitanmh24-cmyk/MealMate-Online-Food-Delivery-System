@@ -32,8 +32,13 @@ export const AuthProvider = ({ children }) => {
         const res = await api.post('auth/login/', { username, password });
         localStorage.setItem('access', res.data.access);
         localStorage.setItem('refresh', res.data.refresh);
-        const profileRes = await api.get('auth/profile/');
-        setUser(profileRes.data);
+        let userData = res.data.user;
+        if (!userData) {
+            const profileRes = await api.get('auth/profile/');
+            userData = profileRes.data;
+        }
+        setUser(userData);
+        return userData;
     };
 
     const logout = () => {

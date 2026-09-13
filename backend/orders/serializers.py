@@ -37,7 +37,7 @@ class OrderSerializer(serializers.ModelSerializer):
     class Meta:
         model = Order
         fields = ['id', 'user', 'restaurant', 'delivery_address', 'delivery_address_details', 'total_amount', 'status', 'created_at', 'items']
-        read_only_fields = ['user', 'total_amount', 'status', 'restaurant']
+        read_only_fields = ['user', 'total_amount', 'restaurant']
 
 class PaymentSerializer(serializers.ModelSerializer):
     class Meta:
