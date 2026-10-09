@@ -1,13 +1,9 @@
-from django.urls import path, include
-from rest_framework.routers import DefaultRouter
-from .views import RestaurantViewSet, CategoryViewSet, FoodItemViewSet, ReviewViewSet
+from django.urls import path
+from . import views
 
-router = DefaultRouter()
-router.register(r'restaurants', RestaurantViewSet)
-router.register(r'categories', CategoryViewSet)
-router.register(r'foods', FoodItemViewSet)
-router.register(r'reviews', ReviewViewSet)
+app_name = 'restaurants'
 
 urlpatterns = [
-    path('', include(router.urls)),
+    path('', views.restaurant_list_view, name='restaurant_list'),
+    path('<int:pk>/', views.restaurant_detail_view, name='restaurant_detail'),
 ]

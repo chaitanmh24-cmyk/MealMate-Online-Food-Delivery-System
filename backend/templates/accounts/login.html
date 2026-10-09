@@ -1,0 +1,89 @@
+﻿{% extends 'base.html' %}
+
+{% block title %}Sign In — MealMate{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6 col-lg-5">
+            <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
+                <div class="card-header bg-white border-0 pt-4 pb-2 text-center">
+                    <span class="fs-1">🍔</span>
+                    <h2 class="fw-bold text-dark mt-2 mb-1">Welcome Back</h2>
+                    <p class="text-muted small">Sign in to order your favorite meals</p>
+                </div>
+
+                <div class="card-body p-4 p-md-5 pt-2">
+                    {% if form.non_field_errors %}
+                        <div class="alert alert-danger py-2 small">
+                            {% for error in form.non_field_errors %}
+                                <div><i class="bi bi-exclamation-circle-fill me-1"></i> {{ error }}</div>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+
+                    <form method="POST" action="{% url 'accounts:login' %}{% if next %}?next={{ next }}{% endif %}" novalidate>
+                        {% csrf_token %}
+
+                        <div class="mb-3">
+                            <label class="form-label small fw-semibold text-muted">Email or Username</label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-light text-muted"><i class="bi bi-person"></i></span>
+                                {{ form.username_or_email }}
+                            </div>
+                            {% if form.username_or_email.errors %}
+                                <div class="text-danger small mt-1">{{ form.username_or_email.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+
+                        <div class="mb-3">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <label class="form-label small fw-semibold text-muted mb-0">Password</label>
+                                <a href="{% url 'accounts:forgot_password' %}" class="small text-muted text-decoration-none" style="font-size: 0.8rem;">Forgot password?</a>
+                            </div>
+                            <div class="input-group mt-1">
+                                <span class="input-group-text bg-light text-muted"><i class="bi bi-lock"></i></span>
+                                {{ form.password }}
+                            </div>
+                            {% if form.password.errors %}
+                                <div class="text-danger small mt-1">{{ form.password.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+
+                        <button type="submit" class="btn btn-primary w-100 py-2 fw-semibold rounded-3 mb-3">
+                            <i class="bi bi-box-arrow-in-right me-1"></i> Sign In
+                        </button>
+                    </form>
+
+                    <div class="position-relative text-center my-3">
+                        <hr class="text-muted">
+                        <span class="position-absolute top-50 start-50 translate-middle bg-white px-2 small text-muted">OR</span>
+                    </div>
+
+                    <!-- Google OAuth login -->
+                    <a href="/accounts/google/login/" class="btn btn-outline-dark w-100 py-2 rounded-3 mb-3 d-flex align-items-center justify-content-center gap-2">
+                        <svg width="18" height="18" viewBox="0 0 18 18">
+                            <path fill="#4285F4" d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844c-.209 1.125-.843 2.078-1.796 2.717v2.258h2.908c1.702-1.567 2.684-3.874 2.684-6.616z"/>
+                            <path fill="#34A853" d="M9 18c2.43 0 4.467-.806 5.956-2.184l-2.908-2.258c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332A8.997 8.997 0 0 0 9 18z"/>
+                            <path fill="#FBBC05" d="M3.964 10.707c-.18-.54-.282-1.117-.282-1.707s.102-1.167.282-1.707V4.961H.957A8.996 8.996 0 0 0 0 9c0 1.452.348 2.827.957 4.039l3.007-2.332z"/>
+                            <path fill="#EA4335" d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0A8.997 8.997 0 0 0 .957 4.961L3.964 7.293C4.672 5.166 6.656 3.58 9 3.58z"/>
+                        </svg>
+                        <span class="small fw-semibold">Continue with Google</span>
+                    </a>
+
+                    <!-- Demo credentials box -->
+                    <div class="bg-light p-3 rounded-3 small text-muted border mb-3">
+                        <div class="fw-bold text-dark mb-1"><i class="bi bi-info-circle me-1"></i> Demo Credentials:</div>
+                        <div>👑 <strong>Admin</strong>: <code>admin</code> / <code>admin123</code></div>
+                    </div>
+
+                    <div class="text-center">
+                        <span class="text-muted small">Don't have an account? </span>
+                        <a href="{% url 'accounts:signup' %}" class="small fw-semibold text-primary text-decoration-none">Sign Up</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

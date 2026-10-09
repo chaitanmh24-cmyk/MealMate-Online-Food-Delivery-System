@@ -1,0 +1,132 @@
+{% extends 'base.html' %}
+
+{% block title %}Checkout — MealMate{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <!-- Breadcrumb -->
+    <nav aria-label="breadcrumb" class="mb-3">
+        <ol class="breadcrumb small">
+            <li class="breadcrumb-item"><a href="/" class="text-decoration-none">Home</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'cart:cart_detail' %}" class="text-decoration-none">Cart</a></li>
+            <li class="breadcrumb-item active" aria-current="page">Checkout</li>
+        </ol>
+    </nav>
+
+    <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 pb-2 border-bottom">
+        <div>
+            <h1 class="h2 fw-bold text-dark mb-1"><i class="bi bi-shield-check text-success me-2"></i>Secure Checkout</h1>
+            <p class="text-muted mb-0">Ordering from <strong class="text-dark">{{ cart.restaurant.name }}</strong></p>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <!-- Left: Delivery Details Form -->
+        <div class="col-lg-7">
+            <div class="card border-0 shadow-sm rounded-4 overflow-hidden mb-4">
+                <div class="card-header bg-white py-3 border-bottom">
+                    <h5 class="fw-bold mb-0 text-dark"><i class="bi bi-geo-alt-fill text-danger me-2"></i>Delivery Address & Contact</h5>
+                </div>
+                <div class="card-body p-4">
+                    <form method="POST" action="{% url 'orders:checkout' %}" id="checkout-form" novalidate>
+                        {% csrf_token %}
+
+                        <!-- Delivery Address -->
+                        <div class="mb-3">
+                            <label for="delivery_address" class="form-label fw-semibold">
+                                Complete Delivery Address <span class="text-danger">*</span>
+                            </label>
+                            <textarea name="delivery_address" id="delivery_address" rows="3" class="form-control {% if errors.delivery_address %}is-invalid{% endif %}" placeholder="Flat / House No, Building Name, Street, Landmark..." required>{{ delivery_address }}</textarea>
+                            {% if errors.delivery_address %}
+                                <div class="invalid-feedback">{{ errors.delivery_address }}</div>
+                            {% else %}
+                                <div class="form-text text-muted">Provide detailed directions to help our delivery rider locate you quickly.</div>
+                            {% endif %}
+                        </div>
+
+                        <div class="row g-3 mb-4">
+                            <!-- City -->
+                            <div class="col-md-6">
+                                <label for="delivery_city" class="form-label fw-semibold">City <span class="text-danger">*</span></label>
+                                <input type="text" name="delivery_city" id="delivery_city" class="form-control" value="{{ delivery_city|default:'Bengaluru' }}" required>
+                            </div>
+
+                            <!-- Contact Mobile -->
+                            <div class="col-md-6">
+                                <label for="contact_number" class="form-label fw-semibold">
+                                    10-Digit Mobile Number <span class="text-danger">*</span>
+                                </label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-light">+91</span>
+                                    <input type="tel" name="contact_number" id="contact_number" maxlength="10" class="form-control {% if errors.contact_number %}is-invalid{% endif %}" value="{{ contact_number }}" placeholder="9876543210" required>
+                                </div>
+                                {% if errors.contact_number %}
+                                    <div class="text-danger small mt-1">{{ errors.contact_number }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <div class="alert alert-info border-0 shadow-sm small d-flex align-items-center gap-2 mb-4">
+                            <i class="bi bi-shield-lock-fill fs-5 text-primary flex-shrink-0"></i>
+                            <div>
+                                Payments are securely processed via <strong>Razorpay Test Mode</strong>. You can test successful payment, simulate failure, or cancel at any time.
+                            </div>
+                        </div>
+
+                        <button type="submit" class="btn btn-primary btn-lg w-100 rounded-pill text-white fw-bold shadow-sm">
+                            <i class="bi bi-credit-card-2-front me-2"></i> Continue to Payment (₹{{ total }})
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right: Order Summary Sidebar -->
+        <div class="col-lg-5">
+            <div class="card border-0 shadow-sm rounded-4 overflow-hidden sticky-top" style="top: 80px;">
+                <div class="card-header bg-dark text-white py-3">
+                    <h5 class="fw-bold mb-0"><i class="bi bi-bag-check me-2"></i>Order Summary</h5>
+                </div>
+                <div class="card-body p-4">
+                    <div class="mb-3 pb-3 border-bottom">
+                        <div class="fw-bold text-dark fs-6">{{ cart.restaurant.name }}</div>
+                        <div class="small text-muted"><i class="bi bi-geo-alt me-1"></i>{{ cart.restaurant.city }}</div>
+                    </div>
+
+                    <div class="order-items-list mb-3" style="max-height: 250px; overflow-y: auto;">
+                        {% for item in items %}
+                            <div class="d-flex justify-content-between align-items-center mb-2 small">
+                                <div>
+                                    <span class="badge {% if item.food_item.food_type == 'Veg' %}bg-success{% else %}bg-danger{% endif %} me-1" style="font-size: 8px;">●</span>
+                                    <span class="fw-semibold text-dark">{{ item.food_item.name }}</span>
+                                    <span class="text-muted">x {{ item.quantity }}</span>
+                                </div>
+                                <span class="fw-bold text-dark">₹{{ item.subtotal }}</span>
+                            </div>
+                        {% endfor %}
+                    </div>
+
+                    <div class="border-top pt-3">
+                        <div class="d-flex justify-content-between mb-1 small">
+                            <span class="text-muted">Subtotal</span>
+                            <span class="fw-semibold text-dark">₹{{ total }}</span>
+                        </div>
+                        <div class="d-flex justify-content-between mb-1 small">
+                            <span class="text-muted">Delivery Charges</span>
+                            <span class="text-success fw-semibold">FREE</span>
+                        </div>
+                        <div class="d-flex justify-content-between mb-3 small">
+                            <span class="text-muted">Taxes & Packaging</span>
+                            <span class="text-dark">₹0.00</span>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center pt-2 border-top">
+                            <span class="fw-bold text-dark fs-5">Total Payable</span>
+                            <span class="fw-bold text-primary fs-4">₹{{ total }}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

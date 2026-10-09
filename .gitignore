@@ -1,16 +1,50 @@
+# Python / Virtual Environment
+venv/
+.venv/
+env/
+backend/venv/
+backend/.venv/
+*.pyc
+*.pyo
+*.pyd
+__pycache__/
+*/__pycache__/
+*/*/__pycache__/
+.pytest_cache/
+*/.pytest_cache/
+
+# Environment Variables & Secrets
+.env
+.env.*
+!.env.example
+backend/.env
+backend/.env.*
+!backend/.env.example
+
+# Databases & Local SQLite
+*.sqlite3
+*.db
+db.sqlite3
+backend/db.sqlite3
+
+# Static & Media uploads
+backend/staticfiles/
+backend/media/
+staticfiles/
+media/
+
+# Logs & Temporary files
+*.log
+scratch/
+.system_generated/
+
+# IDE & OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Frontend
 node_modules/
 dist/
 build/
-.env
-.env.local
-.env.*.local
-venv/
-env/
-__pycache__/
-*.pyc
-*.pyo
-db.sqlite3
-.DS_Store
-*.log
-.vscode/
-.idea/

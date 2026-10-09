@@ -1,0 +1,201 @@
+{% extends 'base.html' %}
+
+{% block title %}Complete Payment — Order #{{ order.order_number }}{% endblock %}
+
+{% block content %}
+<div class="container py-5" style="max-width: 680px;">
+    <div class="card border-0 shadow-sm rounded-4 overflow-hidden mb-4">
+        <!-- Card Header -->
+        <div class="card-header bg-dark text-white p-4 text-center">
+            <span class="badge bg-warning text-dark px-3 py-1 mb-2 fs-6">Razorpay Test Mode</span>
+            <h3 class="fw-bold mb-1">Complete Your Payment</h3>
+            <p class="text-white-50 mb-0">Order #{{ order.order_number }}</p>
+        </div>
+
+        <div class="card-body p-4">
+            <!-- Order Details Overview -->
+            <div class="bg-light rounded-3 p-3 mb-4">
+                <div class="d-flex justify-content-between mb-2">
+                    <span class="text-muted">Restaurant:</span>
+                    <strong class="text-dark">{{ order.restaurant.name }}</strong>
+                </div>
+                <div class="d-flex justify-content-between mb-2">
+                    <span class="text-muted">Deliver to:</span>
+                    <span class="text-dark small text-end" style="max-width: 320px;">{{ order.delivery_address }}, {{ order.delivery_city }}</span>
+                </div>
+                <div class="d-flex justify-content-between mb-2">
+                    <span class="text-muted">Contact:</span>
+                    <span class="text-dark">+91 {{ order.contact_number }}</span>
+                </div>
+                <div class="d-flex justify-content-between mb-2">
+                    <span class="text-muted">Items:</span>
+                    <span class="text-dark">{{ order_items.count }} item{{ order_items.count|pluralize }}</span>
+                </div>
+                <hr class="my-2">
+                <div class="d-flex justify-content-between align-items-center">
+                    <span class="fw-bold text-dark fs-5">Total Amount:</span>
+                    <span class="fw-bold text-primary fs-3">₹{{ payment.amount }}</span>
+                </div>
+            </div>
+
+            <!-- Razorpay Official Checkout Button -->
+            <div class="text-center mb-4">
+                <button id="rzp-button" class="btn btn-primary btn-lg rounded-pill px-5 fw-bold text-white shadow">
+                    <i class="bi bi-lock-fill me-2"></i>Pay ₹{{ payment.amount }} via Razorpay
+                </button>
+            </div>
+
+            <!-- Developer / Test Mode Fast Simulation Section -->
+            <div class="border rounded-3 p-3 bg-white shadow-sm mb-3">
+                <div class="d-flex align-items-center gap-2 mb-2">
+                    <span class="badge bg-secondary">Test Simulator</span>
+                    <small class="text-muted fw-semibold">Test payment outcomes directly without live gateway cards</small>
+                </div>
+                <div class="row g-2">
+                    <div class="col-md-6">
+                        <button id="simulate-success-btn" class="btn btn-success btn-sm w-100 rounded-pill fw-semibold py-2">
+                            <i class="bi bi-check-circle-fill me-1"></i> Simulate Payment Success
+                        </button>
+                    </div>
+                    <div class="col-md-6">
+                        <button id="simulate-fail-btn" class="btn btn-outline-danger btn-sm w-100 rounded-pill fw-semibold py-2">
+                            <i class="bi bi-x-circle-fill me-1"></i> Simulate Payment Failed
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Cancel Payment Action -->
+            <div class="text-center mt-3">
+                <form method="POST" action="{% url 'orders:cancel_order' order.pk %}" class="d-inline">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-link text-danger text-decoration-none small" onclick="return confirm('Cancel this order and payment?');">
+                        <i class="bi bi-slash-circle me-1"></i> Cancel Payment & Order
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<!-- Razorpay Checkout Script -->
+<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+<script>
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+const csrftoken = getCookie('csrftoken');
+
+const rzpOptions = {
+    key: "{{ razorpay_key }}",
+    amount: "{{ amount_paise }}",
+    currency: "INR",
+    name: "MealMate",
+    description: "Order #{{ order.order_number }}",
+    image: "https://cdn-icons-png.flaticon.com/512/3075/3075977.png",
+    order_id: "{{ razorpay_order_id }}",
+    handler: function (response) {
+        verifyPayment(response.razorpay_order_id, response.razorpay_payment_id, response.razorpay_signature);
+    },
+    prefill: {
+        name: "{{ user_name }}",
+        email: "{{ user_email }}",
+        contact: "{{ user_mobile }}"
+    },
+    theme: {
+        color: "#ff4757"
+    },
+    modal: {
+        ondismiss: function() {
+            notifyFailure("User dismissed the payment window");
+        }
+    }
+};
+
+const rzp = new Razorpay(rzpOptions);
+document.getElementById('rzp-button').onclick = function(e) {
+    rzp.open();
+    e.preventDefault();
+};
+
+async function verifyPayment(orderId, paymentId, signature) {
+    try {
+        const res = await fetch("{% url 'orders:payment_verify' %}", {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': csrftoken
+            },
+            body: JSON.stringify({
+                razorpay_order_id: orderId,
+                razorpay_payment_id: paymentId,
+                razorpay_signature: signature
+            })
+        });
+        const data = await res.json();
+        if (data.ok) {
+            window.location.href = "{% url 'orders:order_success' order.pk %}";
+        } else {
+            alert("Payment verification failed: " + (data.error || 'Unknown error'));
+            window.location.href = "{% url 'orders:order_list' %}";
+        }
+    } catch (err) {
+        window.location.href = "{% url 'orders:order_success' order.pk %}";
+    }
+}
+
+async function notifyFailure(reason) {
+    await fetch("{% url 'orders:payment_fail' %}", {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': csrftoken
+        },
+        body: JSON.stringify({
+            razorpay_order_id: "{{ razorpay_order_id }}",
+            reason: reason
+        })
+    });
+}
+
+// Simulator triggers
+document.getElementById('simulate-success-btn').addEventListener('click', async () => {
+    // Generate simulated payment verification request
+    const mockPaymentId = "pay_mock_" + Math.random().toString(36).substring(2, 10);
+    // In test simulator, invoke verification endpoint or complete directly
+    const res = await fetch("{% url 'orders:payment_verify' %}", {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': csrftoken
+        },
+        body: JSON.stringify({
+            razorpay_order_id: "{{ razorpay_order_id }}",
+            razorpay_payment_id: mockPaymentId,
+            razorpay_signature: "mock_signature_valid"
+        })
+    });
+    // Redirect to success
+    window.location.href = "{% url 'orders:order_success' order.pk %}";
+});
+
+document.getElementById('simulate-fail-btn').addEventListener('click', async () => {
+    await notifyFailure("Simulated user payment failure");
+    alert("Payment Failed: Order remains placed with Failed payment status.");
+    window.location.href = "{% url 'orders:order_list' %}";
+});
+</script>
+{% endblock %}

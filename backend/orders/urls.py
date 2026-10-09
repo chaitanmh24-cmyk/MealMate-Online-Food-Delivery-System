@@ -1,12 +1,15 @@
-from django.urls import path, include
-from rest_framework.routers import DefaultRouter
-from .views import CartViewSet, CartItemViewSet, OrderViewSet
+from django.urls import path
+from . import views
 
-router = DefaultRouter()
-router.register(r'cart-items', CartItemViewSet, basename='cart-items')
-router.register(r'orders', OrderViewSet, basename='orders')
+app_name = 'orders'
 
 urlpatterns = [
-    path('', include(router.urls)),
-    path('cart/', CartViewSet.as_view({'get': 'my_cart'}), name='my-cart'),
+    path('', views.order_list_view, name='order_list'),
+    path('checkout/', views.checkout_view, name='checkout'),
+    path('<int:pk>/', views.order_detail_view, name='order_detail'),
+    path('<int:pk>/payment/', views.payment_page_view, name='payment_page'),
+    path('payment/verify/', views.payment_verify_view, name='payment_verify'),
+    path('payment/fail/', views.payment_fail_view, name='payment_fail'),
+    path('<int:pk>/success/', views.order_success_view, name='order_success'),
+    path('<int:pk>/cancel/', views.cancel_order_view, name='cancel_order'),
 ]

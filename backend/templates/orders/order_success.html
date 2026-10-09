@@ -1,0 +1,73 @@
+{% extends 'base.html' %}
+
+{% block title %}Order Confirmed — #{{ order.order_number }}{% endblock %}
+
+{% block content %}
+<div class="container py-5" style="max-width: 720px;">
+    <div class="card border-0 shadow-sm rounded-4 overflow-hidden text-center p-4 p-md-5 bg-white">
+        <!-- Success Icon -->
+        <div class="mb-3">
+            <span class="d-inline-flex align-items-center justify-content-center bg-success bg-opacity-10 text-success rounded-circle" style="width: 80px; height: 80px; font-size: 40px;">
+                <i class="bi bi-check-lg"></i>
+            </span>
+        </div>
+
+        <h2 class="fw-bold text-dark mb-1">Order Placed Successfully!</h2>
+        <p class="text-muted mb-4">
+            Thank you for ordering with MealMate. The kitchen at <strong>{{ order.restaurant.name }}</strong> has received your order and started preparing your meal.
+        </p>
+
+        <!-- Order Summary Card -->
+        <div class="bg-light rounded-4 p-4 text-start mb-4">
+            <div class="row g-3">
+                <div class="col-sm-6">
+                    <span class="text-muted small d-block">Order Reference</span>
+                    <strong class="text-dark fs-5">#{{ order.order_number }}</strong>
+                </div>
+                <div class="col-sm-6 text-sm-end">
+                    <span class="text-muted small d-block">Current Status</span>
+                    <span class="badge bg-warning text-dark px-3 py-1 fw-semibold fs-6">
+                        <i class="bi bi-fire me-1"></i>{{ order.get_status_display }}
+                    </span>
+                </div>
+                <div class="col-sm-6">
+                    <span class="text-muted small d-block">Delivery Address</span>
+                    <span class="text-dark small">{{ order.delivery_address }}, {{ order.delivery_city }}</span>
+                </div>
+                <div class="col-sm-6 text-sm-end">
+                    <span class="text-muted small d-block">Total Paid</span>
+                    <strong class="text-primary fs-5">₹{{ order.total_amount }}</strong>
+                </div>
+            </div>
+
+            <hr class="my-3">
+
+            <h6 class="fw-bold text-dark mb-2">Items Ordered:</h6>
+            <div class="order-items-list">
+                {% for item in order_items %}
+                    <div class="d-flex justify-content-between align-items-center small py-1">
+                        <div>
+                            <span class="text-muted">{{ item.quantity }}x</span>
+                            <span class="fw-semibold text-dark">{{ item.food_name }}</span>
+                        </div>
+                        <span class="text-muted">₹{{ item.subtotal }}</span>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="d-flex flex-wrap justify-content-center gap-3">
+            <a href="{% url 'orders:order_detail' order.pk %}" class="btn btn-primary rounded-pill px-4 text-white fw-semibold">
+                <i class="bi bi-geo-alt-fill me-1"></i> Track Order Live
+            </a>
+            <a href="{% url 'orders:order_list' %}" class="btn btn-outline-secondary rounded-pill px-4">
+                View All Orders
+            </a>
+            <a href="/" class="btn btn-link text-decoration-none">
+                Return to Home
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}

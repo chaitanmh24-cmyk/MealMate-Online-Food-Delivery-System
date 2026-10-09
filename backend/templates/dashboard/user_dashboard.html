@@ -1,0 +1,313 @@
+{% extends 'base.html' %}
+
+{% block title %}My Dashboard — MealMate{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <!-- Header Welcome -->
+    <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 pb-2 border-bottom">
+        <div>
+            <h1 class="h2 fw-bold text-dark mb-1">
+                Hello, {{ user.first_name|default:user.username }}! 👋
+            </h1>
+            <p class="text-muted mb-0">Manage your orders, active deliveries, and account details in one place.</p>
+        </div>
+        <div class="d-flex gap-2">
+            <a href="{% url 'accounts:profile' %}" class="btn btn-outline-secondary btn-sm rounded-pill px-3">
+                <i class="bi bi-pencil me-1"></i>Edit Profile
+            </a>
+            <a href="{% url 'menu:food_list' %}" class="btn btn-primary btn-sm rounded-pill px-4 text-white fw-semibold">
+                <i class="bi bi-plus-circle me-1"></i>Order Food
+            </a>
+        </div>
+    </div>
+
+    <!-- Quick Stats Cards Row -->
+    <div class="row row-cols-2 row-cols-md-4 g-3 mb-4">
+        <div class="col">
+            <div class="card border-0 shadow-sm rounded-4 p-3 bg-white h-100">
+                <div class="d-flex align-items-center justify-content-between">
+                    <div>
+                        <span class="text-muted small d-block">Total Orders</span>
+                        <h3 class="fw-bold text-dark mb-0 mt-1">{{ total_orders }}</h3>
+                    </div>
+                    <div class="rounded-circle bg-primary bg-opacity-10 p-3 text-primary fs-4">
+                        <i class="bi bi-bag-check-fill"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col">
+            <div class="card border-0 shadow-sm rounded-4 p-3 bg-white h-100">
+                <div class="d-flex align-items-center justify-content-between">
+                    <div>
+                        <span class="text-muted small d-block">Total Spent</span>
+                        <h3 class="fw-bold text-success mb-0 mt-1">₹{{ total_spent }}</h3>
+                    </div>
+                    <div class="rounded-circle bg-success bg-opacity-10 p-3 text-success fs-4">
+                        <i class="bi bi-cash-stack"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col">
+            <div class="card border-0 shadow-sm rounded-4 p-3 bg-white h-100">
+                <div class="d-flex align-items-center justify-content-between">
+                    <div>
+                        <span class="text-muted small d-block">Active Orders</span>
+                        <h3 class="fw-bold text-warning mb-0 mt-1">{{ active_orders.count }}</h3>
+                    </div>
+                    <div class="rounded-circle bg-warning bg-opacity-10 p-3 text-warning fs-4">
+                        <i class="bi bi-bicycle"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col">
+            <div class="card border-0 shadow-sm rounded-4 p-3 bg-white h-100">
+                <div class="d-flex align-items-center justify-content-between">
+                    <div>
+                        <span class="text-muted small d-block">Items in Cart</span>
+                        <h3 class="fw-bold text-dark mb-0 mt-1">{{ cart.total_items_count }}</h3>
+                    </div>
+                    <div class="rounded-circle bg-info bg-opacity-10 p-3 text-info fs-4">
+                        <i class="bi bi-cart3"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Active Orders Alert (if any) -->
+    {% if active_orders %}
+        <div class="card border-0 shadow-sm rounded-4 mb-4 bg-light border-start border-warning border-4 p-3">
+            <div class="d-flex align-items-center justify-content-between flex-wrap gap-2">
+                <div class="d-flex align-items-center gap-3">
+                    <span class="spinner-grow text-warning spinner-grow-sm" role="status"></span>
+                    <div>
+                        <h6 class="fw-bold text-dark mb-0">You have {{ active_orders.count }} active delivery in progress!</h6>
+                        <small class="text-muted">
+                            Order #{{ active_orders.first.order_number }} from <strong>{{ active_orders.first.restaurant.name }}</strong> is currently: 
+                            <span class="badge bg-warning text-dark">{{ active_orders.first.get_status_display }}</span>
+                        </small>
+                    </div>
+                </div>
+                <a href="{% url 'orders:order_detail' active_orders.first.pk %}" class="btn btn-warning btn-sm rounded-pill px-4 fw-semibold text-dark">
+                    Track Live <i class="bi bi-arrow-right ms-1"></i>
+                </a>
+            </div>
+        </div>
+    {% endif %}
+
+    <div class="row g-4">
+        <!-- Left: Recent Orders & Search History -->
+        <div class="col-lg-8">
+            <!-- Recent Orders Card -->
+            <div class="card border-0 shadow-sm rounded-4 overflow-hidden mb-4 bg-white">
+                <div class="card-header bg-white py-3 border-bottom d-flex justify-content-between align-items-center">
+                    <h5 class="fw-bold mb-0 text-dark"><i class="bi bi-clock-history me-2 text-primary"></i>Recent Orders</h5>
+                    <a href="{% url 'orders:order_list' %}" class="btn btn-outline-secondary btn-sm rounded-pill px-3">View All</a>
+                </div>
+                <div class="card-body p-0">
+                    {% if recent_orders %}
+                        <div class="table-responsive">
+                            <table class="table align-middle mb-0 table-hover">
+                                <thead class="table-light small text-muted">
+                                    <tr>
+                                        <th scope="col" class="ps-3">Order #</th>
+                                        <th scope="col">Restaurant</th>
+                                        <th scope="col">Date</th>
+                                        <th scope="col">Amount</th>
+                                        <th scope="col" class="text-center">Status</th>
+                                        <th scope="col" class="text-end pe-3">Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for o in recent_orders %}
+                                        <tr>
+                                            <td class="ps-3 fw-bold small text-dark">#{{ o.order_number }}</td>
+                                            <td>
+                                                <div class="fw-semibold text-dark small">{{ o.restaurant.name }}</div>
+                                                <div class="text-muted" style="font-size: 11px;">{{ o.items.count }} items</div>
+                                            </td>
+                                            <td class="small text-muted">{{ o.created_at|date:"d M, h:i A" }}</td>
+                                            <td class="fw-bold text-dark small">₹{{ o.total_amount }}</td>
+                                            <td class="text-center">
+                                                {% if o.status == 'Placed' %}
+                                                    <span class="badge bg-primary text-white" style="font-size: 11px;">Placed</span>
+                                                {% elif o.status == 'Preparing' %}
+                                                    <span class="badge bg-warning text-dark" style="font-size: 11px;">Preparing</span>
+                                                {% elif o.status == 'Out for Delivery' %}
+                                                    <span class="badge bg-info text-dark" style="font-size: 11px;">On Way</span>
+                                                {% elif o.status == 'Delivered' %}
+                                                    <span class="badge bg-success" style="font-size: 11px;">Delivered</span>
+                                                {% elif o.status == 'Cancelled' %}
+                                                    <span class="badge bg-danger" style="font-size: 11px;">Cancelled</span>
+                                                {% endif %}
+                                            </td>
+                                            <td class="text-end pe-3">
+                                                <a href="{% url 'orders:order_detail' o.pk %}" class="btn btn-outline-primary btn-sm rounded-pill px-2" style="font-size: 12px;">
+                                                    Details
+                                                </a>
+                                            </td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <div class="text-center py-5 text-muted">
+                            <i class="bi bi-bag-x fs-1 d-block mb-2 text-muted"></i>
+                            <p class="mb-2">No orders placed yet.</p>
+                            <a href="{% url 'menu:food_list' %}" class="btn btn-primary btn-sm rounded-pill text-white px-4">Browse Menu</a>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Recent Searches -->
+            {% if recent_searches %}
+                <div class="card border-0 shadow-sm rounded-4 p-4 bg-white">
+                    <h6 class="fw-bold text-dark mb-3"><i class="bi bi-search me-2 text-primary"></i>Your Recent Searches</h6>
+                    <div class="d-flex flex-wrap gap-2">
+                        {% for s in recent_searches %}
+                            <a href="{% url 'menu:search' %}?q={{ s.query }}" class="badge bg-light text-dark border px-3 py-2 text-decoration-none rounded-pill shadow-sm">
+                                <i class="bi bi-clock me-1 text-muted"></i>{{ s.query }}
+                            </a>
+                        {% endfor %}
+                    </div>
+                </div>
+            {% endif %}
+        </div>
+
+        <!-- Right: Profile Details & Active Cart Quickview -->
+        <div class="col-lg-4">
+            <!-- Profile Card -->
+            <div class="card border-0 shadow-sm rounded-4 overflow-hidden mb-4 bg-white">
+                <div class="card-header bg-dark text-white py-3 d-flex justify-content-between align-items-center">
+                    <h6 class="fw-bold mb-0"><i class="bi bi-person-badge me-2"></i>Account Profile</h6>
+                    <a href="{% url 'accounts:profile' %}" class="btn btn-light btn-sm rounded-pill px-3 py-0 fw-semibold" style="font-size: 12px;">Edit</a>
+                </div>
+                <div class="card-body p-4">
+                    <div class="d-flex align-items-center gap-3 mb-3 pb-3 border-bottom">
+                        <div class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center fw-bold fs-4" style="width: 50px; height: 50px;">
+                            {{ user.first_name|default:user.username|slice:":1"|upper }}
+                        </div>
+                        <div>
+                            <h6 class="fw-bold text-dark mb-0">{{ user.get_full_name|default:user.username }}</h6>
+                            <span class="text-muted small">{{ user.email }}</span>
+                        </div>
+                    </div>
+
+                    <div class="small mb-2">
+                        <span class="text-muted d-block">Mobile Number:</span>
+                        <strong class="text-dark">{{ user.mobile_number|default:"Not provided" }}</strong>
+                    </div>
+
+                    <div class="small mb-2">
+                        <span class="text-muted d-block">Gender:</span>
+                        <span class="text-dark">{{ user.gender|default:"Not specified" }}</span>
+                    </div>
+
+                    <div class="small mb-2">
+                        <span class="text-muted d-block">Default City:</span>
+                        <span class="text-dark">{{ user.city|default:"Bengaluru" }}</span>
+                    </div>
+
+                    <div class="small">
+                        <span class="text-muted d-block">Delivery Address:</span>
+                        <span class="text-dark">{{ user.address|default:"No address saved yet" }}</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Cart Quickview Card -->
+            <div class="card border-0 shadow-sm rounded-4 overflow-hidden bg-white">
+                <div class="card-header bg-light py-3 d-flex justify-content-between align-items-center">
+                    <h6 class="fw-bold mb-0 text-dark"><i class="bi bi-cart3 me-2 text-primary"></i>Active Cart</h6>
+                    <span class="badge bg-secondary">{{ cart.total_items_count }} items</span>
+                </div>
+                <div class="card-body p-4">
+                    {% if cart_items %}
+                        <div class="small text-muted mb-2">
+                            Ordering from: <strong class="text-dark">{{ cart.restaurant.name }}</strong>
+                        </div>
+                        <div class="mb-3" style="max-height: 140px; overflow-y: auto;">
+                            {% for ci in cart_items %}
+                                <div class="d-flex justify-content-between align-items-center small py-1">
+                                    <span class="text-dark text-truncate" style="max-width: 180px;">{{ ci.quantity }}x {{ ci.food_item.name }}</span>
+                                    <span class="fw-semibold text-dark">₹{{ ci.subtotal }}</span>
+                                </div>
+                            {% endfor %}
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center border-top pt-2 mb-3">
+                            <span class="fw-bold text-dark">Total:</span>
+                            <span class="fw-bold text-primary fs-5">₹{{ cart.total_amount }}</span>
+                        </div>
+                        <a href="{% url 'cart:cart_detail' %}" class="btn btn-primary btn-sm rounded-pill w-100 text-white fw-semibold">
+                            View Full Cart & Checkout
+                        </a>
+                    {% else %}
+                        <div class="text-center py-3 text-muted">
+                            <p class="small mb-2">Your cart is currently empty.</p>
+                            <a href="{% url 'menu:food_list' %}" class="btn btn-outline-primary btn-sm rounded-pill px-3">Explore Menu</a>
+                        </div>
+                    {% endif %}
+                </div>
+        </div>
+    </div>
+
+    <!-- ===================== RECOMMENDED FOR YOU (DASHBOARD) ===================== -->
+    {% if recommendations %}
+        <div class="card border-0 shadow-sm rounded-4 overflow-hidden bg-white mt-4 p-4">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <div>
+                    <h5 class="fw-bold text-dark mb-0"><i class="bi bi-stars text-warning me-2"></i>Recommended For You</h5>
+                    <small class="text-muted">Personalized picks based on your previous order history and cravings</small>
+                </div>
+                <a href="{% url 'recommender:recommendations_list' %}" class="btn btn-outline-primary btn-sm rounded-pill px-3">
+                    View More <i class="bi bi-arrow-right ms-1"></i>
+                </a>
+            </div>
+            <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 g-3">
+                {% for item in recommendations %}
+                    <div class="col">
+                        <div class="card h-100 border-0 bg-light rounded-3 overflow-hidden p-2">
+                            <div class="d-flex align-items-center gap-3">
+                                <div class="position-relative" style="width: 70px; height: 70px; min-width: 70px; overflow: hidden; border-radius: 8px;">
+                                    {% if item.image %}
+                                        <img src="{{ item.image }}" alt="{{ item.name }}" class="w-100 h-100 object-fit-cover" onerror="this.src='https://images.unsplash.com/photo-1546833999-b9f581a1996d?auto=format&fit=crop&w=400&q=60'">
+                                    {% else %}
+                                        <div class="w-100 h-100 bg-secondary bg-opacity-10 d-flex align-items-center justify-content-center">🍲</div>
+                                    {% endif %}
+                                </div>
+                                <div class="flex-grow-1 overflow-hidden">
+                                    <div class="d-flex align-items-center gap-1 mb-1">
+                                        {% if item.food_type == 'Veg' %}
+                                            <span class="badge bg-success" style="font-size: 8px;">● Veg</span>
+                                        {% else %}
+                                            <span class="badge bg-danger" style="font-size: 8px;">● Non-Veg</span>
+                                        {% endif %}
+                                        <span class="text-muted text-truncate" style="font-size: 10px;">{{ item.restaurant.name }}</span>
+                                    </div>
+                                    <h6 class="fw-bold text-dark mb-1 text-truncate" style="font-size: 13px;">{{ item.name }}</h6>
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <span class="fw-bold text-dark fs-6">₹{{ item.price }}</span>
+                                        <button class="btn btn-outline-primary btn-sm rounded-pill px-2 py-0 add-to-cart-btn"
+                                                data-item-id="{{ item.id }}"
+                                                data-item-name="{{ item.name }}"
+                                                data-restaurant-id="{{ item.restaurant.id }}"
+                                                style="font-size: 11px;">
+                                            <i class="bi bi-plus"></i> Add
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

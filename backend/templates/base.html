@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}MealMate — Online Food Delivery{% endblock %}</title>
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <style>
+        :root {
+            --mm-primary: #ff4757;
+            --mm-primary-hover: #ee3545;
+            --mm-dark: #2f3542;
+            --mm-light: #f8f9fa;
+        }
+        .btn-primary, .bg-primary {
+            background-color: var(--mm-primary) !important;
+            border-color: var(--mm-primary) !important;
+        }
+        .btn-primary:hover {
+            background-color: var(--mm-primary-hover) !important;
+            border-color: var(--mm-primary-hover) !important;
+        }
+        .btn-outline-primary {
+            color: var(--mm-primary) !important;
+            border-color: var(--mm-primary) !important;
+        }
+        .btn-outline-primary:hover {
+            background-color: var(--mm-primary) !important;
+            color: #fff !important;
+        }
+        .text-primary {
+            color: var(--mm-primary) !important;
+        }
+    </style>
+    {% block extra_css %}{% endblock %}
+</head>
+<body class="bg-light d-flex flex-column min-vh-100">
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm sticky-top">
+        <div class="container">
+            <a class="navbar-brand fw-bold text-primary fs-3 d-flex align-items-center gap-2" href="/">
+                <span>🍔</span> MealMate
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                    <li class="nav-item">
+                        <a class="nav-link fw-semibold" href="/">Home</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link fw-semibold" href="{% url 'restaurants:restaurant_list' %}">Restaurants</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link fw-semibold" href="{% url 'menu:food_list' %}">Browse Menu</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link fw-semibold" href="{% url 'menu:search' %}">
+                            <i class="bi bi-search me-1"></i>Search
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link fw-semibold" href="{% url 'recommender:recommendations_list' %}">
+                            <i class="bi bi-stars text-warning me-1"></i>For You
+                        </a>
+                    </li>
+                    {% if user.is_staff %}
+                        <li class="nav-item">
+                            <a class="nav-link fw-semibold text-danger" href="{% url 'menu:admin_food_list' %}">
+                                <i class="bi bi-grid-3x3-gap-fill me-1"></i>Manage Food
+                            </a>
+                        </li>
+                    {% endif %}
+                </ul>
+
+                <!-- Compact Navbar Search -->
+                <form class="d-flex me-3" method="GET" action="{% url 'menu:search' %}" role="search">
+                    <div class="input-group input-group-sm" style="min-width: 220px;">
+                        <input class="form-control border-secondary-subtle" type="search" name="q"
+                               placeholder="Search food or restaurant…"
+                               value="{% if request.resolver_match.url_name == 'search' %}{{ request.GET.q }}{% endif %}"
+                               aria-label="Search">
+                        <button class="btn btn-primary px-2 text-white" type="submit">
+                            <i class="bi bi-search"></i>
+                        </button>
+                    </div>
+                </form>
+
+                <div class="d-flex align-items-center gap-2">
+                    {% if user.is_authenticated %}
+                        <div class="dropdown">
+                            <button class="btn btn-outline-secondary btn-sm dropdown-toggle d-flex align-items-center gap-2" type="button" data-bs-toggle="dropdown">
+                                <i class="bi bi-person-circle"></i>
+                                <span>{{ user.first_name|default:user.username }}</span>
+                            </button>
+                            <ul class="dropdown-menu dropdown-menu-end shadow-sm">
+                                <li>
+                                    <div class="dropdown-item-text small text-muted">
+                                        Signed in as<br><strong>{{ user.email }}</strong>
+                                    </div>
+                                </li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li><a class="dropdown-item" href="{% url 'dashboard:user_dashboard' %}"><i class="bi bi-speedometer2 me-2 text-primary"></i> My Dashboard</a></li>
+                                <li><a class="dropdown-item" href="{% url 'orders:order_list' %}"><i class="bi bi-bag-check me-2 text-primary"></i> My Orders</a></li>
+                                <li><a class="dropdown-item" href="{% url 'accounts:profile' %}"><i class="bi bi-person me-2 text-primary"></i> My Profile</a></li>
+                                {% if user.is_staff %}
+                                    <li><hr class="dropdown-divider"></li>
+                                    <li><div class="dropdown-header text-uppercase small fw-bold text-danger">Staff Administration</div></li>
+                                    <li><a class="dropdown-item text-danger fw-semibold" href="{% url 'dashboard:admin_dashboard' %}"><i class="bi bi-bar-chart-fill me-2"></i> Admin Dashboard</a></li>
+                                    <li><a class="dropdown-item text-danger" href="{% url 'menu:admin_food_list' %}"><i class="bi bi-grid-3x3-gap-fill me-2"></i> Manage Menu</a></li>
+                                    <li><a class="dropdown-item text-danger" href="/admin/"><i class="bi bi-shield-lock me-2"></i> Django Admin</a></li>
+                                {% endif %}
+                                <li><hr class="dropdown-divider"></li>
+                                <li>
+                                    <a class="dropdown-item text-danger" href="{% url 'accounts:logout' %}">
+                                        <i class="bi bi-box-arrow-right me-2"></i> Sign Out
+                                    </a>
+                                </li>
+                            </ul>
+                        </div>
+                    {% else %}
+                        <a href="{% url 'accounts:login' %}" class="btn btn-outline-primary btn-sm px-3 fw-semibold">Sign In</a>
+                        <a href="{% url 'accounts:signup' %}" class="btn btn-primary btn-sm px-3 fw-semibold text-white">Sign Up</a>
+                    {% endif %}
+
+                    <!-- Cart Navbar Button with Badge -->
+                    <a href="{% url 'cart:cart_detail' %}" class="btn btn-outline-dark btn-sm rounded-pill px-3 position-relative ms-1 d-flex align-items-center gap-1" id="nav-cart-btn" title="View Cart">
+                        <i class="bi bi-cart3 fs-6"></i>
+                        <span class="d-none d-sm-inline fw-semibold">Cart</span>
+                        <span id="nav-cart-badge" class="badge rounded-pill bg-danger {% if not user.cart.total_items_count %}d-none{% endif %}">
+                            {{ user.cart.total_items_count|default:0 }}
+                        </span>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Global Toast / Message Alerts -->
+    {% if messages %}
+        <div class="container mt-3">
+            {% for message in messages %}
+                <div class="alert alert-{% if message.tags == 'error' %}danger{% elif message.tags == 'info' %}info{% elif message.tags == 'warning' %}warning{% else %}success{% endif %} alert-dismissible fade show shadow-sm" role="alert">
+                    <i class="bi {% if message.tags == 'error' %}bi-exclamation-triangle-fill{% else %}bi-check-circle-fill{% endif %} me-2"></i>
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            {% endfor %}
+        </div>
+    {% endif %}
+
+    <!-- Main Content -->
+    <main class="flex-grow-1">
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-dark text-white py-4 mt-auto">
+        <div class="container text-center">
+            <p class="mb-1 fw-bold fs-5 text-primary">🍔 MealMate</p>
+            <p class="text-white-50 small mb-0">&copy; 2026 MealMate Online Food Delivery System. Built with Django 5 & MySQL 8.</p>
+        </div>
+    </footer>
+
+    <!-- Mixed Restaurant Conflict Modal -->
+    <div class="modal fade" id="mixedRestaurantModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content rounded-4 border-0 shadow">
+                <div class="modal-header border-0 pb-0">
+                    <h5 class="modal-title fw-bold text-dark">
+                        <i class="bi bi-exclamation-triangle-fill text-warning me-2"></i>Replace Cart Items?
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body text-muted py-3">
+                    Your cart currently contains food from <strong class="text-dark" id="conflict-cur-rest"></strong>.<br><br>
+                    You can only order from <strong>one restaurant at a time</strong>. Would you like to clear your existing cart and start a fresh order from <strong class="text-dark" id="conflict-new-rest"></strong>?
+                </div>
+                <div class="modal-footer border-0 pt-0">
+                    <button type="button" class="btn btn-light rounded-pill px-4" data-bs-dismiss="modal">Keep Existing Cart</button>
+                    <button type="button" class="btn btn-primary text-white rounded-pill px-4 fw-semibold" id="conflict-clear-add-btn">
+                        Clear & Add New
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Global Floating Toast Notification -->
+    <div class="toast-container position-fixed bottom-0 end-0 p-3" style="z-index: 1090;">
+        <div id="cartToast" class="toast align-items-center text-white bg-dark border-0 shadow-lg rounded-4" role="alert" aria-live="assertive" aria-atomic="true">
+            <div class="d-flex">
+                <div class="toast-body d-flex align-items-center gap-2">
+                    <i class="bi bi-check-circle-fill text-success fs-5"></i>
+                    <span id="cartToastMsg">Added to cart!</span>
+                </div>
+                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap 5 JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- Global Cart Fetch Script -->
+    <script>
+    function updateNavbarCartBadge(count) {
+        const badge = document.getElementById('nav-cart-badge');
+        if (badge) {
+            badge.textContent = count;
+            if (count > 0) {
+                badge.classList.remove('d-none');
+            } else {
+                badge.classList.add('d-none');
+            }
+        }
+    }
+
+    function showToast(msg) {
+        const toastEl = document.getElementById('cartToast');
+        const toastMsg = document.getElementById('cartToastMsg');
+        if (toastEl && toastMsg) {
+            toastMsg.textContent = msg;
+            const toast = new bootstrap.Toast(toastEl, { delay: 2500 });
+            toast.show();
+        }
+    }
+
+    // CSRF helper
+    function getCookieGlobal(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+
+    let pendingConflictItem = null;
+
+    document.addEventListener('click', async (e) => {
+        const btn = e.target.closest('.add-to-cart-btn');
+        if (!btn) return;
+        e.preventDefault();
+
+        const foodId = btn.dataset.itemId;
+        const foodName = btn.dataset.itemName || 'Food item';
+        const qty = parseInt(document.getElementById('qty-input')?.value) || 1;
+
+        {% if not user.is_authenticated %}
+            window.location.href = "{% url 'accounts:login' %}?next=" + encodeURIComponent(window.location.pathname);
+            return;
+        {% endif %}
+
+        btn.disabled = true;
+        const originalHtml = btn.innerHTML;
+        btn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status"></span>';
+
+        try {
+            const res = await fetch("{% url 'cart:cart_add' %}", {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCookieGlobal('csrftoken')
+                },
+                body: JSON.stringify({ food_item_id: foodId, quantity: qty })
+            });
+
+            const data = await res.json();
+            if (res.status === 409 && data.conflict) {
+                // Mixed restaurant conflict
+                pendingConflictItem = { foodId, foodName, qty };
+                document.getElementById('conflict-cur-rest').textContent = data.current_restaurant;
+                document.getElementById('conflict-new-rest').textContent = data.new_restaurant;
+                const modal = new bootstrap.Modal(document.getElementById('mixedRestaurantModal'));
+                modal.show();
+            } else if (data.ok) {
+                updateNavbarCartBadge(data.cart_count);
+                showToast(`✅ Added ${foodName} to cart!`);
+            } else {
+                alert(data.error || 'Could not add to cart.');
+            }
+        } catch (err) {
+            console.error(err);
+        } finally {
+            btn.disabled = false;
+            btn.innerHTML = originalHtml;
+        }
+    });
+
+    // Clear & Add New Button inside Modal
+    document.getElementById('conflict-clear-add-btn')?.addEventListener('click', async () => {
+        if (!pendingConflictItem) return;
+        try {
+            // First clear cart
+            await fetch("{% url 'cart:cart_clear' %}", {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCookieGlobal('csrftoken')
+                }
+            });
+
+            // Then add new item
+            const addRes = await fetch("{% url 'cart:cart_add' %}", {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCookieGlobal('csrftoken')
+                },
+                body: JSON.stringify({ food_item_id: pendingConflictItem.foodId, quantity: pendingConflictItem.qty })
+            });
+            const data = await addRes.json();
+            if (data.ok) {
+                updateNavbarCartBadge(data.cart_count);
+                showToast(`✅ Cart replaced! Added ${pendingConflictItem.foodName}.`);
+                bootstrap.Modal.getInstance(document.getElementById('mixedRestaurantModal')).hide();
+            }
+        } catch (err) {
+            console.error(err);
+        }
+    });
+    </script>
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

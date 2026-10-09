@@ -1,0 +1,155 @@
+{% extends 'base.html' %}
+
+{% block title %}Restaurants — MealMate{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <!-- Header & Breadcrumbs -->
+    <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 pb-2 border-bottom">
+        <div>
+            <h1 class="h2 fw-bold text-dark mb-1">Partner Restaurants</h1>
+            <p class="text-muted mb-0">Discover authentic kitchens, pure-veg dining, and popular local favourites</p>
+        </div>
+        <div>
+            <span class="badge bg-light text-dark border px-3 py-2 fs-6">
+                <strong>{{ total_count }}</strong> Restaurants Available
+            </span>
+        </div>
+    </div>
+
+    <!-- Filters Row -->
+    <div class="card border-0 shadow-sm mb-4">
+        <div class="card-body p-3">
+            <form method="GET" action="{% url 'restaurants:restaurant_list' %}" class="row g-2 align-items-center">
+                <!-- Restaurant Type Filter -->
+                <div class="col-12 col-md-3">
+                    <label class="form-label small fw-semibold text-muted mb-1">Dietary Type</label>
+                    <select name="type" class="form-select form-select-sm" onchange="this.form.submit()">
+                        <option value="">All Types (Veg & Non-Veg)</option>
+                        <option value="Veg" {% if selected_type == 'Veg' %}selected{% endif %}>🥦 Pure Veg Only</option>
+                        <option value="Non-Veg" {% if selected_type == 'Non-Veg' %}selected{% endif %}>🍗 Non-Veg</option>
+                        <option value="Both" {% if selected_type == 'Both' %}selected{% endif %}>🍲 Both Veg & Non-Veg</option>
+                    </select>
+                </div>
+
+                <!-- Cuisine Filter -->
+                <div class="col-12 col-md-3">
+                    <label class="form-label small fw-semibold text-muted mb-1">Cuisine</label>
+                    <select name="cuisine" class="form-select form-select-sm" onchange="this.form.submit()">
+                        <option value="">All Cuisines</option>
+                        {% for c in cuisines %}
+                            <option value="{{ c.id }}" {% if selected_cuisine == c.id %}selected{% endif %}>{{ c.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <!-- City Filter -->
+                <div class="col-12 col-md-3">
+                    <label class="form-label small fw-semibold text-muted mb-1">City</label>
+                    <select name="city" class="form-select form-select-sm" onchange="this.form.submit()">
+                        <option value="">All Cities</option>
+                        {% for city_name in cities %}
+                            <option value="{{ city_name }}" {% if selected_city == city_name %}selected{% endif %}>{{ city_name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <!-- Sorting -->
+                <div class="col-12 col-md-3">
+                    <label class="form-label small fw-semibold text-muted mb-1">Sort By</label>
+                    <select name="sort" class="form-select form-select-sm" onchange="this.form.submit()">
+                        <option value="-rating" {% if selected_sort == '-rating' %}selected{% endif %}>⭐ Highest Rated</option>
+                        <option value="rating" {% if selected_sort == 'rating' %}selected{% endif %}>⭐ Lowest Rated</option>
+                        <option value="name" {% if selected_sort == 'name' %}selected{% endif %}>🔤 Name (A - Z)</option>
+                    </select>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Active Filter Badges -->
+    {% if selected_type or selected_cuisine or selected_city %}
+        <div class="mb-3 d-flex flex-wrap align-items-center gap-2">
+            <span class="small text-muted">Active Filters:</span>
+            {% if selected_type %}
+                <span class="badge bg-secondary">Type: {{ selected_type }}</span>
+            {% endif %}
+            {% if selected_city %}
+                <span class="badge bg-secondary">City: {{ selected_city }}</span>
+            {% endif %}
+            <a href="{% url 'restaurants:restaurant_list' %}" class="btn btn-sm btn-link text-decoration-none text-danger p-0 ms-2">
+                <i class="bi bi-x-circle"></i> Clear Filters
+            </a>
+        </div>
+    {% endif %}
+
+    <!-- Restaurant Grid -->
+    {% if restaurants %}
+        <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
+            {% for r in restaurants %}
+                <div class="col">
+                    <div class="card h-100 border-0 shadow-sm rounded-4 overflow-hidden position-relative hover-shadow transition">
+                        <!-- Image Container -->
+                        <div class="position-relative" style="height: 190px; overflow: hidden; background-color: #f1f2f6;">
+                            {% if r.image %}
+                                <img src="{{ r.image }}" alt="{{ r.name }}" class="w-100 h-100 object-fit-cover" onerror="this.src='https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?auto=format&fit=crop&w=800&q=80'">
+                            {% else %}
+                                <div class="d-flex align-items-center justify-content-center h-100 text-muted fs-1">🍽️</div>
+                            {% endif %}
+                            
+                            <!-- Badges on Image -->
+                            <div class="position-absolute top-0 start-0 m-2">
+                                {% if r.restaurant_type == 'Veg' %}
+                                    <span class="badge bg-success shadow-sm px-2 py-1"><i class="bi bi-circle-fill small me-1"></i> Pure Veg</span>
+                                {% elif r.restaurant_type == 'Non-Veg' %}
+                                    <span class="badge bg-danger shadow-sm px-2 py-1"><i class="bi bi-circle-fill small me-1"></i> Non-Veg</span>
+                                {% else %}
+                                    <span class="badge bg-warning text-dark shadow-sm px-2 py-1">Veg & Non-Veg</span>
+                                {% endif %}
+                            </div>
+
+                            <div class="position-absolute top-0 end-0 m-2">
+                                <span class="badge bg-dark text-white px-2 py-1 shadow-sm">
+                                    <i class="bi bi-star-fill text-warning me-1"></i>{{ r.rating|default:"4.0" }}
+                                </span>
+                            </div>
+                        </div>
+
+                        <!-- Card Body -->
+                        <div class="card-body d-flex flex-column p-3">
+                            <h5 class="card-title fw-bold text-dark mb-1">{{ r.name }}</h5>
+                            <p class="card-text text-muted small mb-2 text-truncate">
+                                <i class="bi bi-geo-alt-fill text-danger me-1"></i>{{ r.address }}
+                            </p>
+                            
+                            <!-- Cuisines Pills -->
+                            <div class="mb-3 d-flex flex-wrap gap-1">
+                                {% for cuisine in r.cuisines.all %}
+                                    <span class="badge bg-light text-muted border small">{{ cuisine.name }}</span>
+                                {% empty %}
+                                    <span class="badge bg-light text-muted border small">Multi-Cuisine</span>
+                                {% endfor %}
+                            </div>
+
+                            <!-- Footer action -->
+                            <div class="mt-auto pt-2 border-top d-flex justify-content-between align-items-center">
+                                <span class="small text-muted"><i class="bi bi-clock me-1"></i> 30-45 mins</span>
+                                <a href="{% url 'restaurants:restaurant_detail' r.pk %}" class="btn btn-primary btn-sm px-3 rounded-pill text-white fw-semibold">
+                                    View Menu <i class="bi bi-arrow-right ms-1"></i>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="text-center py-5">
+            <span class="display-3">🔍</span>
+            <h4 class="fw-bold mt-3">No restaurants found</h4>
+            <p class="text-muted">Try adjusting your filters or browsing all categories.</p>
+            <a href="{% url 'restaurants:restaurant_list' %}" class="btn btn-outline-primary btn-sm">Reset All Filters</a>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}
